@@ -1,5 +1,0 @@
-bucket       = "REPLACE_WITH_EXISTING_BUCKET"
-key          = "clouddevops/terraform.tfstate"
-region       = "eu-north-1"
-use_lockfile = true
-encrypt      = true
