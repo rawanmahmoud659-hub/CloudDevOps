@@ -1,10 +1,11 @@
-variable "ecr_repos" {
-  type = list(string)
+variable "aws_region" {
+  type    = string
+  default = "eu-north-1"
+}
 
-   default = [
-    "clouddevops-app",
-    "clouddevops-backend"
-  ]
+variable "ecr_repos" {
+  type    = list(string)
+  default = ["clouddevops-app", "clouddevops-backend"]
 }
 
 variable "cluster_name" {
