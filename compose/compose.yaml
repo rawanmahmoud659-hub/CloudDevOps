@@ -1,0 +1,65 @@
+name: microservice-app
+
+services:
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: ivolve
+      MYSQL_USER: ivolveuser
+      MYSQL_PASSWORD: 1234
+    networks:
+      - db-net
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql  
+
+  auth-service:
+    build: ../app/auth-service
+    image: iv-auth-service:latest
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ivolve
+      DB_USER: ivolveuser
+      DB_PASSWORD: 1234
+    networks:
+      - db-net
+      - authfront-net
+    ports:
+      - "5000"
+    depends_on:
+      - mysql
+      
+
+  roadmap-service:
+    build: ../app/roadmap-service
+    image: iv-roadmap-service:latest
+    networks:
+      - roadmapfront-net
+    ports:
+      - "8080"
+
+  frontend:
+    build: ../app/frontend
+    image: iv-frontend:latest
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:5000
+      ROADMAP_SERVICE_URL: http://roadmap-service:8080
+    networks:
+      - authfront-net
+      - roadmapfront-net
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - roadmap-service
+
+networks:
+  db-net:
+  authfront-net:
+  roadmapfront-net:
+
+volumes:
+  mysql-data:
