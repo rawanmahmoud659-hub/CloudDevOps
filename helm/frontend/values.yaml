@@ -1,0 +1,20 @@
+replicaCount: 1
+
+image:
+  repository: 300718421551.dkr.ecr.eu-north-1.amazonaws.com/frontend
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+
+env:
+  AUTH_SERVICE_URL: "http://auth-service:5000"
+  ROADMAP_SERVICE_URL: "http://roadmap-service:8080"
+
+ingress:
+  enabled: true
+  className: nginx
+  path: /
+  

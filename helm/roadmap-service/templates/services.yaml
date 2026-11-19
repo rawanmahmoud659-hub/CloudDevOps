@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: roadmap-service
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: roadmap-service
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      

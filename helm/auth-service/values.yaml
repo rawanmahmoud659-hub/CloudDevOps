@@ -1,0 +1,18 @@
+replicaCount: 1
+
+image:
+  repository: 300718421551.dkr.ecr.eu-north-1.amazonaws.com/auth-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5000
+
+env:
+  DB_HOST: "mysql"
+  DB_PORT: "3306"
+  DB_NAME: "ivolve"
+
+secretRef:
+  name: ivolve-secrets
