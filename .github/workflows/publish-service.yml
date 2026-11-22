@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SERVICE: ${{ inputs.service }}
-      ROLE_ARN: ${{ secerts.AWS_ROLE_ARN }}
+      ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
       AWS_REGION: ${{ vars.AWS_REGION }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -54,7 +54,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
         with:
           aws-region: ${{ vars.AWS_REGION }}
-          role-to-assume: ${{ secerts.AWS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
 
       - name: Sign in to ECR
         if: steps.publish.outputs.enabled == 'true'
