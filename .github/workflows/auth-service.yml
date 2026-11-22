@@ -23,3 +23,5 @@ jobs:
     uses: ./.github/workflows/publish-service.yml
     with:
       service: auth-service
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}

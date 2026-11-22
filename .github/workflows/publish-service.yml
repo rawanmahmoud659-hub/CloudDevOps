@@ -6,6 +6,9 @@ on:
       service:
         required: true
         type: string
+    secrets:
+      AWS_ROLE_ARN:
+        required: false
 
 permissions:
   contents: write
@@ -37,8 +40,13 @@ jobs:
       - name: Configure the publish step
         id: publish
         run: |
+          if [[ -z "$ROLE_ARN" ]]; then
+            echo "::notice::Set the AWS_ROLE_ARN repository secret to publish images and update Helm."
+          fi
+          if [[ -z "$AWS_REGION" ]]; then
+            echo "::notice::Set the AWS_REGION repository variable to publish images and update Helm."
+          fi
           if [[ -z "$ROLE_ARN" || -z "$AWS_REGION" ]]; then
-            echo "::notice::Set AWS_ROLE_ARN and AWS_REGION to publish images and update Helm."
             exit 0
           fi
 

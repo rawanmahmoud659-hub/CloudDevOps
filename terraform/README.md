@@ -18,9 +18,9 @@ EKS and NAT incur AWS charges. Do not delete the local state until migration is 
 
 Terraform registers `https://token.actions.githubusercontent.com` with IAM and grants the CloudDevOps `main` branch permission to assume the publishing role. If the account already has the GitHub OIDC provider, import its ARN into `aws_iam_openid_connect_provider.github_actions` before applying.
 
-After applying a reviewed plan, set the GitHub Actions repository variables `AWS_REGION` and `AWS_ROLE_ARN`. Use the value of `terraform output -raw gh_oidc_role` for the role. Terraform must manage the `frontend`, `auth-service`, and `roadmap-service` ECR repositories.
+After applying a reviewed plan, set the GitHub Actions repository variable `AWS_REGION` and repository secret `AWS_ROLE_ARN`. Use the value of `terraform output -raw gh_oidc_role` for the role. Terraform must manage the `frontend`, `auth-service`, and `roadmap-service` ECR repositories.
 
-Each service workflow builds and scans its image. It publishes to ECR when both repository variables are set, then writes that commit's image tag to the service's Helm values on `main`. GitHub must allow the workflow token to push this commit. An Argo CD Application watching the chart on `main` can sync the resulting change.
+Each service workflow builds and scans its image. It publishes to ECR when the repository secret and variable are set, then writes that commit's image tag to the service's Helm values on `main`. GitHub must allow the workflow token to push this commit. An Argo CD Application watching the chart on `main` can sync the resulting change.
 
 ## Optional EKS settings
 
