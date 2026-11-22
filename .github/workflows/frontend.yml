@@ -1,0 +1,25 @@
+name: Publish frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/frontend/**'
+      - '.github/workflows/frontend.yml'
+      - '.github/workflows/publish-service.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: publish-frontend-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/publish-service.yml
+    with:
+      service: frontend

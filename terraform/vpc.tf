@@ -1,13 +1,7 @@
 module "main_vpc" {
   source   = "./modules/vpc"
-  vpc_cidr = "10.0.0.0/16"
-  vpc_name = "main-vpc"
-  public_subnets_cidr = {
-    "a" = "10.0.1.0/24"
-    "b" = "10.0.3.0/24"
-  }
-  private_subnets_cidr = {
-    "a" = "10.0.2.0/24"
-    "b" = "10.0.4.0/24"
-  }
+  vpc_cidr = var.vpc_cidr
+  vpc_name = var.vpc_name
+  public_subnets_cidr = var.public_subnets_cidr
+  private_subnets_cidr = var.private_subnets_cidr
 }

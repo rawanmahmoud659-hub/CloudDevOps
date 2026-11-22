@@ -1,0 +1,104 @@
+name: Build, scan and publish a service
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      SERVICE: ${{ inputs.service }}
+      ROLE_ARN: ${{ secerts.AWS_ROLE_ARN }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Build the service
+        run: docker build --tag "$SERVICE:$GITHUB_SHA" "app/$SERVICE"
+
+      - name: Scan the image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ inputs.service }}:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          format: table
+          exit-code: "0"
+
+      - name: Configure the publish step
+        id: publish
+        run: |
+          if [[ -z "$ROLE_ARN" || -z "$AWS_REGION" ]]; then
+            echo "::notice::Set AWS_ROLE_ARN and AWS_REGION to publish images and update Helm."
+            exit 0
+          fi
+
+          git fetch origin main
+          if git diff --quiet "$GITHUB_SHA" origin/main -- "app/$SERVICE"; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "A newer commit changed this service. Skipping this image publish."
+          fi
+
+      - name: Assume the ECR publishing role
+        if: steps.publish.outputs.enabled == 'true'
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secerts.AWS_ROLE_ARN }}
+
+      - name: Sign in to ECR
+        if: steps.publish.outputs.enabled == 'true'
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@7290e214a610b32bc0eef81748948b6d466a8783 # v2
+
+      - name: Push the image
+        if: steps.publish.outputs.enabled == 'true'
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          repository="$REGISTRY/$SERVICE"
+          for tag in "$GITHUB_SHA" latest; do
+            docker tag "$SERVICE:$GITHUB_SHA" "$repository:$tag"
+            docker push "$repository:$tag"
+          done
+
+      - name: Record the deployed image in Helm
+        if: steps.publish.outputs.enabled == 'true'
+        env:
+          IMAGE_REPOSITORY: ${{ steps.ecr.outputs.registry }}/${{ inputs.service }}
+        run: |
+          values_file="helm/$SERVICE/values.yaml"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          for attempt in 1 2 3; do
+            git fetch origin main
+            if ! git diff --quiet "$GITHUB_SHA" origin/main -- "app/$SERVICE"; then
+              echo "A newer commit changed this service. Keeping its Helm values."
+              exit 0
+            fi
+
+            git switch --detach origin/main
+            yq -i '.image.repository = strenv(IMAGE_REPOSITORY) | .image.tag = strenv(GITHUB_SHA)' "$values_file"
+            git add "$values_file"
+            git diff --cached --quiet && exit 0
+            git commit -m "Deploy $SERVICE image from $GITHUB_SHA"
+
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep "$attempt"
+          done
+
+          echo "::error::Could not push the Helm values update to main."
+          exit 1

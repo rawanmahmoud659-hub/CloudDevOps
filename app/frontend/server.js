@@ -50,6 +50,10 @@ app.post("/signup", async (req, res) => {
   } catch (err) {
     if (err.response?.status === 503) return renderDbError(res);
     const message = err.response?.data?.message || "Signup failed.";
+    console.warn("Signup request failed", {
+      status: err.response?.status,
+      code: err.code
+    });
     res.status(400).render("auth", { error: message, mode: "signup" });
   }
 });

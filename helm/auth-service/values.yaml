@@ -15,4 +15,4 @@ env:
   DB_NAME: "ivolve"
 
 secretRef:
-  name: ivolve-secrets
+  name: app-secret

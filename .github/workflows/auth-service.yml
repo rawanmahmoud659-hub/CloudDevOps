@@ -1,0 +1,25 @@
+name: Publish auth-service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/auth-service/**'
+      - '.github/workflows/auth-service.yml'
+      - '.github/workflows/publish-service.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: publish-auth-service-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/publish-service.yml
+    with:
+      service: auth-service

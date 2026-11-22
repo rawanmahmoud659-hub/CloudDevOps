@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ivolve-config
+  namespace: ivolve
+data:
+  DATABASE_HOST: mysql
+  DATABASE_PORT: "3306"
+  DATABASE_NAME: ivolve
+  API_BASE_URL: /api

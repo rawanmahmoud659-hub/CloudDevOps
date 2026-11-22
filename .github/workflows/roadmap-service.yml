@@ -1,0 +1,25 @@
+name: Publish roadmap-service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/roadmap-service/**'
+      - '.github/workflows/roadmap-service.yml'
+      - '.github/workflows/publish-service.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: publish-roadmap-service-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/publish-service.yml
+    with:
+      service: roadmap-service
